@@ -13,16 +13,16 @@ import argparse
 import cv2
 
 #                Filename            BGR           text
-templateInfoList = [ ["Images2/Red.jpg",  (0, 0, 255),  "Red"],
-                 ["Images2/Blue.jpg", (255, 0, 0), "Blue"],
-                 ["Images2/Yellow.jpg", (0, 255, 255), "Yellow"],
-                 ["Images2/Yellow90.jpg", (0, 255, 255), "Yellow"],
-                 ["Images2/Yellow180.jpg", (0, 255, 255), "Yellow"],
-                 ["Images2/Yellow270.jpg", (0, 255, 255), "Yellow"],
-                 ["Images2/Gurney.jpg", (0, 0, 0), "Gurney"],
-                 ["Images2/Gurney90.jpg", (0, 0, 0), "Gurney"],
-                 ["Images2/Gurney180.jpg", (0, 0, 0), "Gurney"],
-                 ["Images2/Gurney270.jpg", (0, 0, 0), "Gurney"] ]
+templateInfoList = [ ["Images2\Red.jpg",  (0, 0, 255),  "Red"],
+                 ["Images2\Blue.jpg", (255, 0, 0), "Blue"],
+                 ["Images2\Yellow.jpg", (0, 255, 255), "Yellow"],
+                 ["Images2\Yellow90.jpg", (0, 255, 255), "Yellow"],
+                 ["Images2\Yellow180.jpg", (0, 255, 255), "Yellow"],
+                 ["Images2\Yellow270.jpg", (0, 255, 255), "Yellow"],
+                 ["Images2\Gurney.jpg", (0, 0, 0), "Gurney"],
+                 ["Images2\Gurney90.jpg", (0, 0, 0), "Gurney"],
+                 ["Images2\Gurney180.jpg", (0, 0, 0), "Gurney"],
+                 ["Images2\Gurney270.jpg", (0, 0, 0), "Gurney"] ]
 
 blurSize = (5,5)
 
@@ -124,10 +124,9 @@ while True:
                 cv2.rectangle(imageBlur, (startX, startY), (endX, endY),
                     templateColor[i], 3)
 
-    # show our output image *before* applying non-maxima suppression
-    # cv2.imshow("Before NMS", clone)
-    # show the output image
-        cv2.imshow("After NMS", imageBlur)
+    #show our output image *before* applying non-maxima suppression
+    cv2.imshow("Before NMS", clone)
+    cv2.imshow("After NMS", imageBlur)
     if cv2.waitKey(10) == 27:
         cv2.destroyAllWindows()
         break
