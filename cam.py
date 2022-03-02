@@ -10,7 +10,7 @@ def main():
     cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920) #1280x720
     cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
     # get train features
-    img = cv2.imread('Images2\\newgurney.png')
+    img = cv2.imread('Images2/newgurney.png')
     
     #cv2.imshow("Template", img)
     

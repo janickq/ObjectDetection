@@ -6,16 +6,23 @@ Created on Tue Jan 11 15:14:24 2022
 """
 
 # import the necessary pages
+import imutils
 from imutils.object_detection import non_max_suppression
 import numpy as np
 import argparse
 import cv2
 
 #                Filename            BGR           text
-templateInfoList = [ ["Images2\Red.jpg",  (0, 0, 255),  "Red"],
-                 ["Images2\Blue.jpg", (255, 0, 0), "Blue"],
-                 ["Images2\Yellow.jpg", (0, 255, 255), "Yellow"],
-                 ["Images2\Gurney.jpg", (0, 0, 0), "Gurney"] ]
+templateInfoList = [ ["Images2/Red.jpg",  (0, 0, 255),  "Red"],
+                 ["Images2/Blue.jpg", (255, 0, 0), "Blue"],
+                 ["Images2/Yellow.jpg", (0, 255, 255), "Yellow"],
+                 ["Images2/Yellow90.jpg", (0, 255, 255), "Yellow"],
+                 ["Images2/Yellow180.jpg", (0, 255, 255), "Yellow"],
+                 ["Images2/Yellow270.jpg", (0, 255, 255), "Yellow"],
+                 ["Images2/Gurney.jpg", (0, 0, 0), "Gurney"],
+                 ["Images2/Gurney90.jpg", (0, 0, 0), "Gurney"],
+                 ["Images2/Gurney180.jpg", (0, 0, 0), "Gurney"],
+                 ["Images2/Gurney270.jpg", (0, 0, 0), "Gurney"] ]
 
 blurSize = (5,5)
 
@@ -26,8 +33,10 @@ ap = argparse.ArgumentParser()
 #ap.add_argument("-t", "--template", type=str, required=True,
 #	help="path to template image")
 
-ap.add_argument("-b", "--threshold", type=float, default=0.8,
+ap.add_argument("-b", "--threshold", type=float, default=0.7,
 	help="threshold for multi-template matching")
+ap.add_argument("-v", "--visualize",
+	help="Flag indicating whether or not to visualize each iteration")
 args = vars(ap.parse_args())
 
 # load the input image and template image from disk, then grab the
@@ -42,10 +51,10 @@ numOfTemplate = len(templateInfoList)
 for i in range(numOfTemplate):
     template.append(cv2.imread(templateInfoList[i][0]))
     templateSize.append(template[i].shape[:2])
-    templateBlur.append(cv2.blur(template[i], blurSize) );
+    templateBlur.append(cv2.blur(template[i], blurSize))
     templateColor.append(templateInfoList[i][1])
     
-cv2.imshow("Template", templateBlur[0])
+# cv2.imshow("Template", templateBlur[0])
 
 cam = cv2.VideoCapture(0)
 cam.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
@@ -56,53 +65,69 @@ while True:
     frame_got, image = cam.read()
     if frame_got is False:
         break
-    imageBlur = cv2.blur(image, blurSize);
-    cv2.imshow("Image", image)
+    imageBlur = cv2.blur(image, blurSize)
+    # cv2.imshow("Image", image)
     clone = image.copy()
+
+    for scale in np.linspace(1.0, 0.2, 2)[::-1]:
+        # resize the image according to the scale, and keep track
+        # of the ratio of the resizing
+        resized = imutils.resize(imageBlur, width = int(imageBlur.shape[1] * scale))
+        # r = imageBlur.shape[1] / float(resized.shape[1])
+        # # if the resized image is smaller than the template, then break
+        # # from the loop
+        # if resized.shape[0] < tH or resized.shape[1] < tW:
+        #     break
     
-    for i in range(numOfTemplate):
-        (tW, tH) = templateSize[i]
-        # perform template matching
-        print("[INFO] performing template matching...")
-        #result = cv2.matchTemplate(image, template[i],
-        #                           cv2.TM_CCOEFF_NORMED)
-        result = cv2.matchTemplate(imageBlur, templateBlur[i],
-                                   cv2.TM_CCOEFF_NORMED)
-
-        # find all locations in the result map where the matched value is
-        # greater than the threshold, then clone our original image so we
-        # can draw on it
-        (yCoords, xCoords) = np.where(result >= args["threshold"])
+        for i in range(numOfTemplate):
+            (tW, tH) = templateSize[i]
+            # perform template matching
+            print("[INFO] performing template matching...")
+            #result = cv2.matchTemplate(image, template[i],
+            #                           cv2.TM_CCOEFF_NORMED)
+                    # loop over the scales of the image
 
 
-        print("[INFO] {} matched locations *before* NMS".format(len(yCoords)))
-        # loop over our starting (x, y)-coordinates
-        for (x, y) in zip(xCoords, yCoords):
-            # draw the bounding box on the image
-            cv2.rectangle(clone, (x, y), (x + tW, y + tH), templateColor[i], 3)
-    
+            result = cv2.matchTemplate(imageBlur, templateBlur[i],
+                                    cv2.TM_CCOEFF_NORMED)
 
-        # initialize our list of rectangles
-        rects = []
-        # loop over the starting (x, y)-coordinates again
-        for (x, y) in zip(xCoords, yCoords):
-            # update our list of rectangles
-            rects.append((x, y, x + tW, y + tH))
-    
-        # apply non-maxima suppression to the rectangles
-        pick = non_max_suppression(np.array(rects))
-        print("[INFO] {} matched locations *after* NMS".format(len(pick)))
+            # find all locations in the result map where the matched value is
+            # greater than the threshold, then clone our original image so we
+            # can draw on it
 
-        # loop over the final bounding boxes
-        for (startX, startY, endX, endY) in pick:
-	        # draw the bounding box on the image
-	        cv2.rectangle(imageBlur, (startX, startY), (endX, endY),
-		        templateColor[i], 3)
+                
+            (yCoords, xCoords) = np.where(result >= args["threshold"])
+            if len(yCoords) == 0:
+                break
+
+            print("[INFO] {} matched locations *before* NMS".format(len(yCoords)))
+            # loop over our starting (x, y)-coordinates
+            for (x, y) in zip(xCoords, yCoords):
+                # draw the bounding box on the image
+                cv2.rectangle(clone, (x, y), (x + tW, y + tH), templateColor[i], 3)
+
+
+            # initialize our list of rectangles
+            rects = []
+            # loop over the starting (x, y)-coordinates again
+            for (x, y) in zip(xCoords, yCoords):
+                # update our list of rectangles
+                rects.append((x, y, x + tW, y + tH))
+
+            # apply non-maxima suppression to the rectangles
+            pick = non_max_suppression(np.array(rects))
+            print("[INFO] {} matched locations *after* NMS".format(len(pick)))
+
+            # loop over the final bounding boxes
+            for (startX, startY, endX, endY) in pick:
+                # draw the bounding box on the image
+                cv2.rectangle(imageBlur, (startX, startY), (endX, endY),
+                    templateColor[i], 3)
 
     # show our output image *before* applying non-maxima suppression
-    cv2.imshow("Before NMS", clone)
+    # cv2.imshow("Before NMS", clone)
     # show the output image
-    cv2.imshow("After NMS", imageBlur)
+        cv2.imshow("After NMS", imageBlur)
     if cv2.waitKey(10) == 27:
         cv2.destroyAllWindows()
         break
