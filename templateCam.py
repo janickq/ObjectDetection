@@ -13,16 +13,16 @@ import argparse
 import cv2
 
 #                Filename            BGR           text
-templateInfoList = [ ["Images2\Red.jpg",  (0, 0, 255),  "Red"],
-                 ["Images2\Blue.jpg", (255, 0, 0), "Blue"],
-                 ["Images2\Yellow.jpg", (0, 255, 255), "Yellow"],
-                 ["Images2\Yellow90.jpg", (0, 255, 255), "Yellow"],
-                 ["Images2\Yellow180.jpg", (0, 255, 255), "Yellow"],
-                 ["Images2\Yellow270.jpg", (0, 255, 255), "Yellow"],
-                 ["Images2\Gurney.jpg", (0, 0, 0), "Gurney"],
-                 ["Images2\Gurney90.jpg", (0, 0, 0), "Gurney"],
-                 ["Images2\Gurney180.jpg", (0, 0, 0), "Gurney"],
-                 ["Images2\Gurney270.jpg", (0, 0, 0), "Gurney"] ]
+templateInfoList = [ ["Images2/Red.jpg",  (0, 0, 255),  "Red"],
+                 ["Images2/Blue.jpg", (255, 0, 0), "Blue"],
+                 ["Images2/Yellow.jpg", (0, 255, 255), "Yellow"],
+                 ["Images2/Yellow90.jpg", (0, 255, 255), "Yellow"],
+                 ["Images2/Yellow180.jpg", (0, 255, 255), "Yellow"],
+                 ["Images2/Yellow270.jpg", (0, 255, 255), "Yellow"],
+                 ["Images2/Gurney.jpg", (0, 0, 0), "Gurney"],
+                 ["Images2/Gurney90.jpg", (0, 0, 0), "Gurney"],
+                 ["Images2/Gurney180.jpg", (0, 0, 0), "Gurney"],
+                 ["Images2/Gurney270.jpg", (0, 0, 0), "Gurney"] ]
 
 blurSize = (5,5)
 
@@ -33,7 +33,7 @@ ap = argparse.ArgumentParser()
 #ap.add_argument("-t", "--template", type=str, required=True,
 #	help="path to template image")
 
-ap.add_argument("-b", "--threshold", type=float, default=0.7,
+ap.add_argument("-b", "--threshold", type=float, default=0.65,
 	help="threshold for multi-template matching")
 ap.add_argument("-v", "--visualize",
 	help="Flag indicating whether or not to visualize each iteration")
@@ -59,17 +59,19 @@ for i in range(numOfTemplate):
 cam = cv2.VideoCapture(0)
 cam.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+src = cv2.imread("Images2/image8.jpg")
+src = cv2.resize(src, (800, 550))
     
 while True:
     # display the  image to our screen
-    frame_got, image = cam.read()
+    frame_got, image = 1, src
     if frame_got is False:
         break
     imageBlur = cv2.blur(image, blurSize)
     # cv2.imshow("Image", image)
     clone = image.copy()
 
-    for scale in np.linspace(1.0, 0.2, 2)[::-1]:
+    for scale in np.linspace(1.2, 0.8, 5)[::-1]:
         # resize the image according to the scale, and keep track
         # of the ratio of the resizing
         resized = imutils.resize(imageBlur, width = int(imageBlur.shape[1] * scale))
@@ -97,8 +99,8 @@ while True:
 
                 
             (yCoords, xCoords) = np.where(result >= args["threshold"])
-            if len(yCoords) == 0:
-                break
+            # if len(yCoords) == 0:
+            #     break
 
             print("[INFO] {} matched locations *before* NMS".format(len(yCoords)))
             # loop over our starting (x, y)-coordinates
@@ -123,10 +125,10 @@ while True:
                 # draw the bounding box on the image
                 cv2.rectangle(imageBlur, (startX, startY), (endX, endY),
                     templateColor[i], 3)
-
+            cv2.imshow("After NMS", imageBlur)
     #show our output image *before* applying non-maxima suppression
-    cv2.imshow("Before NMS", clone)
-    cv2.imshow("After NMS", imageBlur)
+    # cv2.imshow("Before NMS", clone)
+    
     if cv2.waitKey(10) == 27:
         cv2.destroyAllWindows()
         break
