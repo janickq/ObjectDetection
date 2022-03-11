@@ -141,10 +141,11 @@ def ProcessGrid(image):
             # result[mask==0] = 255
             x,y,w,h = cv2.boundingRect(c)
             result = imagecopy[y:y+h, x:x+w]
+            cv2.imshow("r",result)
             match, color = templateMatch(result)
             resultList.append(color)
-            # cv2.waitKey(100)
-        print()
+            cv2.waitKey(300)
+      
     return resultList
 
 def split(arr, size):
